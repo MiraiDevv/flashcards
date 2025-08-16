@@ -1,0 +1,24 @@
+body {
+    width: 300px;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+#generate-button {
+    margin-bottom: 10px;
+}
+
+#flashcards-container {
+    text-align: left;
+}
+
+.flashcard {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.flashcard h3 {
+    margin-top: 0;
+}
