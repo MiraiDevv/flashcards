@@ -10,10 +10,25 @@
 <body>
     <div class="container">
         <h1>Automatic Flashcards</h1>
-        <p class="subtitle">Click the button to generate flashcards from the current page.</p>
+        <p class="subtitle">Generate flashcards from the current page.</p>
+
+        <div class="settings">
+            <label for="language-select">Language:</label>
+            <select id="language-select">
+                <option value="en">English</option>
+                <option value="pt">Portuguese</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+            </select>
+        </div>
+
         <button id="generate-button">Generate Flashcards</button>
         <div id="flashcards-container"></div>
     </div>
+    <footer class="attribution">
+        <p>Powered by <a href="https://freedictionaryapi.com/" target="_blank">FreeDictionaryAPI.com</a></p>
+    </footer>
     <script src="popup.js"></script>
 </body>
 </html>

@@ -68,6 +68,42 @@ h1 {
     margin-top: 10px;
 }
 
+.settings {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.settings label {
+    margin-right: 10px;
+    font-size: 0.9em;
+}
+
+#language-select {
+    font-family: 'Poppins', sans-serif;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: #fff;
+}
+
+.attribution {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 0.8em;
+    color: var(--subtitle-color);
+}
+
+.attribution a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.attribution a:hover {
+    text-decoration: underline;
+}
+
 .flashcard {
     background-color: #f8f9fa;
     border: 1px solid var(--border-color);

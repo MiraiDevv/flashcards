@@ -1,7 +1,7 @@
 {
   "name": "Automatic Flashcards",
   "description": "Generates flashcards from the content of the current page.",
-  "version": "1.0",
+  "version": "1.1",
   "manifest_version": 3,
   "action": {
     "default_popup": "popup.html",
@@ -14,9 +14,10 @@
   },
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
-    "https://api.dictionaryapi.dev/*"
+    "https://freedictionaryapi.com/*"
   ]
 }

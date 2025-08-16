@@ -1,21 +1,41 @@
 document.addEventListener('DOMContentLoaded', () => {
     const generateButton = document.getElementById('generate-button');
     const flashcardsContainer = document.getElementById('flashcards-container');
+    const languageSelect = document.getElementById('language-select');
+
+    // --- Language Persistence ---
+
+    function saveLanguagePreference() {
+        const selectedLanguage = languageSelect.value;
+        chrome.storage.local.set({ language: selectedLanguage });
+    }
+
+    function loadLanguagePreference() {
+        chrome.storage.local.get(['language'], (result) => {
+            if (result.language) {
+                languageSelect.value = result.language;
+            }
+        });
+    }
+
+    // Load saved language on startup and add listener for changes
+    loadLanguagePreference();
+    languageSelect.addEventListener('change', saveLanguagePreference);
+
+    // --- Core Logic ---
 
     generateButton.addEventListener('click', () => {
         generateButton.disabled = true;
         flashcardsContainer.innerHTML = '<p>Generating flashcards...</p>';
 
-        // 1. Get the active tab
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             const activeTab = tabs[0];
-            if (!activeTab) {
+            if (!activeTab || !activeTab.id) {
                 flashcardsContainer.innerHTML = '<p>Could not find active tab.</p>';
                 generateButton.disabled = false;
                 return;
             }
 
-            // 2. Execute the content script
             chrome.scripting.executeScript(
                 {
                     target: { tabId: activeTab.id },
@@ -23,12 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 (injectionResults) => {
                     if (chrome.runtime.lastError || !injectionResults || injectionResults.length === 0) {
-                        flashcardsContainer.innerHTML = '<p>Error injecting script. Make sure you are on a valid webpage.</p>';
+                        flashcardsContainer.innerHTML = '<p>Error: Could not access page content. Try a different page.</p>';
                         generateButton.disabled = false;
                         return;
                     }
 
-                    // 3. Process the result from the content script
                     const pageText = injectionResults[0].result;
                     if (!pageText) {
                         flashcardsContainer.innerHTML = '<p>Could not extract text from the page.</p>';
@@ -36,11 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    // 4. Extract unique words
-                    const words = pageText.match(/[a-zA-Z]+/g) || [];
+                    // Using a more robust regex to better match words
+                    const words = pageText.match(/[\p{L}]+/gu) || [];
                     const uniqueWords = [...new Set(words.map(word => word.toLowerCase()))];
 
-                    // Let's just take the first 5 words to avoid too many API calls
                     const wordsToDefine = uniqueWords.slice(0, 5);
 
                     if (wordsToDefine.length === 0) {
@@ -49,42 +67,45 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    // 5. Fetch definitions
-                    getDefinitions(wordsToDefine);
+                    const selectedLanguage = languageSelect.value;
+                    getDefinitions(wordsToDefine, selectedLanguage);
                 }
             );
         });
     });
 
-    async function getDefinitions(words) {
+    async function getDefinitions(words, lang) {
         const promises = words.map(word =>
-            fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`)
+            fetch(`https://freedictionaryapi.com/api/v1/entries/${lang}/${word}`)
                 .then(response => {
-                    if (!response.ok) {
-                       return null; // Word not found or API error
-                    }
+                    if (!response.ok) return null;
                     return response.json();
                 })
+                .catch(() => null)
         );
 
         const results = await Promise.all(promises);
 
-        // 6. Display flashcards
         flashcardsContainer.innerHTML = ''; // Clear loading message
+        let definitionsFound = 0;
+
         results.forEach(result => {
-            if (result && result.length > 0) {
-                const wordData = result[0];
-                const word = wordData.word;
-                const definition = wordData.meanings[0]?.definitions[0]?.definition || 'No definition found.';
+            if (result && result.word) {
+                const wordData = result.entries?.[0];
+                if (!wordData) return;
+
+                const definition = wordData.senses?.[0]?.definition || 'No definition found.';
+                const partOfSpeech = wordData.partOfSpeech || '';
 
                 const card = document.createElement('div');
                 card.className = 'flashcard';
-                card.innerHTML = `<h3>${word}</h3><p>${definition}</p>`;
+                card.innerHTML = `<h3>${result.word} <em>(${partOfSpeech})</em></h3><p>${definition}</p>`;
                 flashcardsContainer.appendChild(card);
+                definitionsFound++;
             }
         });
 
-        if (flashcardsContainer.innerHTML === '') {
+        if (definitionsFound === 0) {
             flashcardsContainer.innerHTML = '<p>Could not find definitions for any words on the page.</p>';
         }
 
